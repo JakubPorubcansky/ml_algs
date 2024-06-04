@@ -30,8 +30,6 @@ class Adaline:
         if X.shape[0] != y.shape[0]:
             raise ValueError("X and y must have the same number of samples")
         
-        # X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
-
         np.random.seed(1)
 
         self.weights_ = np.random.normal(loc=0.0, scale=0.01, size=X.shape[1])
