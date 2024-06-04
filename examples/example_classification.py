@@ -6,9 +6,6 @@ from ml_algs.adaline import Adaline
 
 X, y = make_classification(n_features=2, n_redundant=0, n_informative=2,
                         n_clusters_per_class=1, n_classes=2, random_state=10)
-import numpy as np
-X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-y = np.array([0, 1, 1, 1])
 
 a = Adaline(max_iter=20, learning_rate=0.05)
 p = Perceptron(max_iter=20, learning_rate=0.001)
