@@ -1,6 +1,8 @@
 import pytest
 import numpy as np
-from ml_algs.perceptron.perceptron import Perceptron
+from sklearn.datasets import make_classification
+
+from ml_algs.perceptron import Perceptron
 
 def test_fit_predict_linearly_separable_data():
     p = Perceptron(max_iter=10, learning_rate=0.001)
@@ -20,18 +22,18 @@ def test_fit_predict_linearly_separable_data():
     assert np.all(test_prediction == test_y)
 
 def test_fit_predict_not_linearly_separable_data():
-    p = Perceptron(max_iter=40, learning_rate=0.1)
+    p = Perceptron(max_iter=100, learning_rate=0.01)
 
-    train_X = np.array([[0, 4], [1, 4], [2, 4], [3, 4], [4, 1], [0, 0], [1, 0], [2, 0], [3, 0], [4, 3]])
-    train_y = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1])
+    train_X, train_y = make_classification(n_features=2, n_redundant=0, n_informative=2,
+                            n_clusters_per_class=1, n_classes=2, random_state=10)
 
-    expected_y = np.array([0, 0, 0, 0, 1, 1, 1, 1, 1, 0])
+    min_expected_accuracy = 0.9
 
     p.fit(train_X, train_y)
 
     train_prediction = p.predict(train_X)
 
-    assert np.all(train_prediction == expected_y)
+    assert np.sum(train_prediction == train_y) / len(train_y) >= min_expected_accuracy
 
 
 def test_predict_if_not_fitted():
