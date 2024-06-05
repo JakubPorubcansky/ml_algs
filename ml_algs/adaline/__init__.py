@@ -1,1 +1,1 @@
-from .adaline import Adaline
+from .adaline_gd import AdalineGradientDescent
