@@ -1,3 +1,4 @@
+from typing import Generator
 import numpy as np
 
 class AdalineMiniBatchGradientDescent:
@@ -49,12 +50,12 @@ class AdalineMiniBatchGradientDescent:
             if batch_size <= 0 or batch_size > n_samples_total:
                 raise ValueError("batch_size, if specified as integer, must be greater than 0 and less than or equal to the number of samples in X") 
             
-            self.batch_size = batch_size
+            self._batch_size = batch_size
 
         elif isinstance(batch_size, float):
             if batch_size <= 0.0 or batch_size > 1.0:
                 raise ValueError("batch_size, if specified as float, must be greater than 0.0 and less than or equal to 1.0")
-            self.batch_size = np.ceil(batch_size * n_samples_total).astype(int)
+            self._batch_size = np.ceil(batch_size * n_samples_total).astype(int)
     
     def _validate_before_fit(self, X, y) -> None:
         if X.shape[0] == 0:
@@ -78,13 +79,14 @@ class AdalineMiniBatchGradientDescent:
         loss_in_epoch = self._calculate_loss(X, y)
         self._losses.append(loss_in_epoch)
 
-    def _generate_batches(self, X, y) -> tuple[list[np.ndarray], list[np.ndarray]]:
+
+    def _generate_batches(self, X, y) -> Generator:
         n_samples = X.shape[0]
         indices = np.arange(n_samples)
         np.random.shuffle(indices)
 
-        for i in range(0, n_samples, self.batch_size):
-            idx_until = min(i + self.batch_size, n_samples)
+        for i in range(0, n_samples, self._batch_size):
+            idx_until = min(i + self._batch_size, n_samples)
             batch_indices = indices[i:idx_until]
             yield X[batch_indices], y[batch_indices]
             
