@@ -1,9 +1,10 @@
 import numpy as np
 
-class AdalineGradientDescent:
+class AdalineMiniBatchGradientDescent:
     def __init__(self, max_iter: int = 100, learning_rate: float = 0.001, random_seed: int = 1) -> None:
         self.max_iter = max_iter
         self.learning_rate = learning_rate
+        self._batch_size = None
         self._random_seed = random_seed
 
         self._weights = None
@@ -32,20 +33,33 @@ class AdalineGradientDescent:
         
         return self._losses
 
-    def fit(self, X, y) -> 'AdalineGradientDescent':
+    def fit(self, X, y, batch_size: float | int = 0.2) -> 'AdalineMiniBatchGradientDescent':
+        self._store_batch_size(batch_size, n_samples_total=X.shape[0])
         self._validate_before_fit(X, y)
         self._set_seed()
         self._initialize_attributes(n_features=X.shape[1])
-
+ 
         for _ in range(self.max_iter):
             self._fit_one_epoch(X, y)
 
         return self
     
+    def _store_batch_size(self, batch_size: float | int, n_samples_total: int) -> None:
+        if isinstance(batch_size, int):
+            if batch_size <= 0 or batch_size > n_samples_total:
+                raise ValueError("batch_size, if specified as integer, must be greater than 0 and less than or equal to the number of samples in X") 
+            
+            self.batch_size = batch_size
+
+        elif isinstance(batch_size, float):
+            if batch_size <= 0.0 or batch_size > 1.0:
+                raise ValueError("batch_size, if specified as float, must be greater than 0.0 and less than or equal to 1.0")
+            self.batch_size = np.ceil(batch_size * n_samples_total).astype(int)
+    
     def _validate_before_fit(self, X, y) -> None:
         if X.shape[0] == 0:
             raise ValueError("X must have at least one sample")
-                
+        
         if X.shape[0] != y.shape[0]:
             raise ValueError("X and y must have the same number of samples")
     
@@ -58,14 +72,38 @@ class AdalineGradientDescent:
         self._losses = []
 
     def _fit_one_epoch(self, X, y) -> None:
+        for X_batch, y_batch in self._generate_batches(X, y):
+            self.fit_on_batch(X_batch, y_batch)
+        
+        loss_in_epoch = self._calculate_loss(X, y)
+        self._losses.append(loss_in_epoch)
+
+    def _generate_batches(self, X, y) -> tuple[list[np.ndarray], list[np.ndarray]]:
+        n_samples = X.shape[0]
+        indices = np.arange(n_samples)
+        np.random.shuffle(indices)
+
+        for i in range(0, n_samples, self.batch_size):
+            idx_until = min(i + self.batch_size, n_samples)
+            batch_indices = indices[i:idx_until]
+            yield X[batch_indices], y[batch_indices]
+            
+    def fit_on_batch(self, X, y):
         pred = self.activation(self.net_input(X))
         errors = y - pred
 
         self._weights += self.learning_rate * 2.0 * (errors.dot(X) / X.shape[0])
         self._bias += self.learning_rate * 2.0 * errors.mean()
 
-        loss_in_epoch = np.mean(errors ** 2)
-        self._losses.append(loss_in_epoch)
+    def _calculate_loss(self, X, y) -> float:
+        pred = self.activation(self.net_input(X))
+        errors = y - pred
+        return np.mean(errors ** 2)
+
+    def _update_parameters(self, x_i, y_i, pred_i) -> None:
+        update = self.learning_rate * (y_i - pred_i)
+        self._weights += update * x_i
+        self._bias += update
 
     def net_input(self, X) -> np.ndarray:
         return np.dot(X, self.weights) + self.bias

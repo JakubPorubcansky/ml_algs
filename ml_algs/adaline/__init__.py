@@ -1,1 +1,2 @@
 from .adaline_gd import AdalineGradientDescent
+from .adaline_sgd import AdalineMiniBatchGradientDescent
