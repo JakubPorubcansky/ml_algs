@@ -1,9 +1,9 @@
 from sklearn.datasets import make_classification
 import matplotlib.pyplot as plt
 
-from ml_algs.perceptron import Perceptron
-from ml_algs.adaline import AdalineGradientDescent, AdalineMiniBatchGradientDescent
-from ml_algs.logistic_regression import LogisticRegressionMiniBatchGradientDescent
+from ml_algs.classification.perceptron import Perceptron
+from ml_algs.classification.adaline import AdalineGradientDescent, AdalineMiniBatchGradientDescent
+from ml_algs.classification.logistic_regression import LogisticRegressionMiniBatchGradientDescent
 
 X, y = make_classification(n_samples=100, n_features=2, n_redundant=0, n_informative=2,
                         n_clusters_per_class=1, n_classes=2, random_state=10)
