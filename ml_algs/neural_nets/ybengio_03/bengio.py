@@ -5,12 +5,14 @@ class BengioNet:
     def __init__(self, n_all_letters: int, n_context_letters: int, n_features: int, n_hidden:int, 
                  regularization_rate: float, learning_rate: float, random_seed: int = 1):
         g = torch.Generator().manual_seed(random_seed)
+
+        # y = b + Wz + U tanh(d + Hz) where z = Cx
         self.C = torch.randn(n_all_letters, n_features, generator=g)
-        self.W = torch.randn(n_context_letters * n_features, n_all_letters, generator=g)
-        self.b = torch.randn(n_all_letters, generator=g)
-        self.H = torch.randn(n_context_letters * n_features, n_hidden, generator=g)
-        self.d = torch.randn(n_hidden, generator=g)
-        self.U = torch.randn(n_hidden, n_all_letters, generator=g)
+        self.W = torch.randn(n_context_letters * n_features, n_all_letters, generator=g)  / (n_context_letters * n_features) ** 0.5
+        self.b = torch.randn(n_all_letters, generator=g)                                  * 0
+        self.H = torch.randn(n_context_letters * n_features, n_hidden, generator=g)       / (n_context_letters * n_features) ** 0.5
+        self.d = torch.randn(n_hidden, generator=g)                                       * 0.01
+        self.U = torch.randn(n_hidden, n_all_letters, generator=g)                        / (n_hidden) ** 0.5
 
         self.regularization_rate = regularization_rate
         self.learning_rate = learning_rate
@@ -41,7 +43,8 @@ class BengioNet:
             self.losses.append(loss.item())
 
     def calculate_loss(self, probs, Y):
-        return -probs[torch.arange(len(Y)), Y].log().mean() #+ self.regularization_rate * (self.W**2).mean() 
+        reg_term = (self.W**2).mean() + (self.H**2).mean() + (self.U**2).mean()
+        return -probs[torch.arange(len(Y)), Y].log().mean() + self.regularization_rate * reg_term
     
     def eval(self, xs):
         return self._forward(xs)
